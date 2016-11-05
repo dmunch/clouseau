@@ -132,6 +132,7 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
         forceRefresh = true
         logger.info("Forced merge complete.")
       })
+      'ok
     case _ =>
       'ignored
   }
@@ -168,11 +169,15 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
     }
     try {
       ctx.args.writer.rollback()
+      'ok
     } catch {
       case e: AlreadyClosedException => 'ignored
-      case e: IOException => logger.warn("Error while closing writer", e)
+      case e: IOException =>
+        logger.warn("Error while closing writer", e)
+        'logged
     } finally {
       super.exit(msg)
+      'finally
     }
   }
 

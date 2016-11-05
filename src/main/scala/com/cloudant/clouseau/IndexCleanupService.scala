@@ -47,13 +47,17 @@ class IndexCleanupService(ctx: ServiceContext[ConfigurationArgs]) extends Servic
     val m = includePattern.matcher(fileOrDir.getAbsolutePath)
     if (m.find && !activeSigs.contains(m.group(1))) {
       logger.info("Removing unreachable index " + m.group)
+
       call('main, ('delete, m.group)) match {
         case 'ok =>
           'ok
         case ('error, 'not_found) =>
           recursivelyDelete(fileOrDir)
           fileOrDir.delete
+          'notfound
       }
+    } else {
+      'ok
     }
   }
 

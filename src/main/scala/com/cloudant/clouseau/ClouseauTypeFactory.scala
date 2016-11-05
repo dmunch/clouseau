@@ -110,6 +110,7 @@ object ClouseauTypeFactory extends TypeFactory {
           map.get("boost") match {
             case Some(boost: Number) =>
               field.setBoost(toFloat(boost))
+              'ok
             case None =>
               'ok
           }
@@ -122,6 +123,7 @@ object ClouseauTypeFactory extends TypeFactory {
               facets.addFields(doc, List(new CategoryPath(name, value)))
             }
           }
+          'ok
         case None =>
           'ok
       }
@@ -130,6 +132,7 @@ object ClouseauTypeFactory extends TypeFactory {
       constructField(name, value.toString, toStore(map), Index.NOT_ANALYZED, toTermVector(map)) match {
         case Some(field) =>
           doc.add(field)
+          'ok
         case None =>
           'ok
       }
@@ -141,6 +144,7 @@ object ClouseauTypeFactory extends TypeFactory {
           if (isFacet(map)) {
             doc.add(new DoubleDocValuesField(name, doubleValue))
           }
+          'ok
         case None =>
           logger.warn("Unrecognized value: %s".format(value))
           'ok

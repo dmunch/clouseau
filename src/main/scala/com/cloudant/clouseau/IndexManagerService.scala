@@ -144,6 +144,7 @@ class IndexManagerService(ctx: ServiceContext[ConfigurationArgs]) extends Servic
   override def trapMonitorExit(monitored: Any, ref: Reference, reason: Any) = monitored match {
     case pid: Pid =>
       lru.remove(pid)
+      'ok
     case _ =>
       'ignored
   }
@@ -154,6 +155,7 @@ class IndexManagerService(ctx: ServiceContext[ConfigurationArgs]) extends Servic
         for ((pid, ref) <- list) {
           pid ! (ref, msg)
         }
+        'ok
       case None =>
         'ok
     }
