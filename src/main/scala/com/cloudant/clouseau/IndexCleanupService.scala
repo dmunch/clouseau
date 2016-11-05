@@ -12,13 +12,16 @@
 
 package com.cloudant.clouseau
 
-import com.yammer.metrics.scala._
+import com.codahale.metrics._
+import nl.grons.metrics.scala.InstrumentedBuilder
+
 import java.io.File
 import java.util.regex.Pattern
 import org.apache.log4j.Logger
 import scalang._
 
-class IndexCleanupService(ctx: ServiceContext[ConfigurationArgs]) extends Service(ctx) with Instrumented {
+class IndexCleanupService(ctx: ServiceContext[ConfigurationArgs]) extends Service(ctx) with InstrumentedBuilder {
+  override val metricRegistry = new MetricRegistry()
 
   val logger = Logger.getLogger("clouseau.cleanup")
   val rootDir = new File(ctx.args.config.getString("clouseau.dir", "target/indexes"))

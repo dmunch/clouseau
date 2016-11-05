@@ -12,14 +12,17 @@
 
 package com.cloudant.clouseau
 
-import com.yammer.metrics.scala._
+import com.codahale.metrics._
+import nl.grons.metrics.scala.InstrumentedBuilder
+
 import org.apache.log4j.Logger
 import org.apache.lucene.analysis.tokenattributes._
 import scala.collection.immutable.List
 import scalang._
 import org.apache.lucene.analysis.Analyzer
 
-class AnalyzerService(ctx: ServiceContext[ConfigurationArgs]) extends Service(ctx) with Instrumented {
+class AnalyzerService(ctx: ServiceContext[ConfigurationArgs]) extends Service(ctx) with InstrumentedBuilder {
+  override val metricRegistry = new MetricRegistry()
 
   val logger = Logger.getLogger("clouseau.analyzer")
 

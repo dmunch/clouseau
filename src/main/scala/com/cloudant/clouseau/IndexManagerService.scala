@@ -20,10 +20,12 @@ import java.util.Map.Entry
 import scala.collection.mutable.Map
 import org.apache.log4j.Logger
 import scalang._
-import com.yammer.metrics.scala._
+import com.codahale.metrics._
+import nl.grons.metrics.scala.InstrumentedBuilder
 import scala.collection.JavaConversions._
 
-class IndexManagerService(ctx: ServiceContext[ConfigurationArgs]) extends Service(ctx) with Instrumented {
+class IndexManagerService(ctx: ServiceContext[ConfigurationArgs]) extends Service(ctx) with InstrumentedBuilder {
+  override val metricRegistry = new MetricRegistry()
 
   class LRU(initialCapacity: Int = 100, loadFactor: Float = 0.75f) {
 

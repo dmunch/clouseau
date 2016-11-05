@@ -33,6 +33,7 @@ class ClouseauTypeFactorySpec extends SpecificationWithJUnit {
         (toStore(Map("store" -> store.name)) must be equalTo
           Store.valueOf(store.name))
       }
+      ok
     }
 
     "support all enumeration values for store (case insensitively)" in {
@@ -40,6 +41,7 @@ class ClouseauTypeFactorySpec extends SpecificationWithJUnit {
         (toStore(Map("store" -> store.name.toLowerCase)) must be equalTo
           Store.valueOf(store.name))
       }
+      ok
     }
 
     "use the default if store string is not recognized" in {
@@ -63,6 +65,7 @@ class ClouseauTypeFactorySpec extends SpecificationWithJUnit {
         (toIndex(Map("index" -> index.name)) must be equalTo
           Index.valueOf(index.name))
       }
+      ok
     }
 
     "support all enumeration values for index (case insensitively)" in {
@@ -70,6 +73,7 @@ class ClouseauTypeFactorySpec extends SpecificationWithJUnit {
         (toIndex(Map("index" -> index.name.toLowerCase)) must be equalTo
           Index.valueOf(index.name))
       }
+      ok
     }
 
     "use the default if index string is not recognized" in {
