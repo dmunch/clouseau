@@ -21,9 +21,9 @@ import scala.collection.JavaConversions._
 import scalang._
 import org.jboss.netty.buffer.ChannelBuffer
 import org.apache.lucene.util.BytesRef
-import org.apache.lucene.facet.params.FacetIndexingParams
-import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetFields
-import org.apache.lucene.facet.taxonomy.CategoryPath
+//import org.apache.lucene.facet.params.FacetIndexingParams
+//import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetFields
+//import org.apache.lucene.facet.taxonomy.CategoryPath
 import scala.collection.mutable.ArrayBuffer
 
 case class SearchRequest(options: Map[Symbol, Any])
@@ -115,14 +115,14 @@ object ClouseauTypeFactory extends TypeFactory {
               'ok
           }
           doc.add(field)
-          if (isFacet(map) && value.nonEmpty) {
-            val fp = FacetIndexingParams.DEFAULT
-            val delim = fp.getFacetDelimChar
-            if (!name.contains(delim) && !value.contains(delim)) {
-              val facets = new SortedSetDocValuesFacetFields(fp)
-              facets.addFields(doc, List(new CategoryPath(name, value)))
-            }
-          }
+          //if (isFacet(map) && value.nonEmpty) {
+          //  val fp = FacetIndexingParams.DEFAULT
+          //  val delim = fp.getFacetDelimChar
+          //  if (!name.contains(delim) && !value.contains(delim)) {
+          //    val facets = new SortedSetDocValuesFacetFields(fp)
+          //    facets.addFields(doc, List(new CategoryPath(name, value)))
+          //  }
+          //}
           'ok
         case None =>
           'ok
