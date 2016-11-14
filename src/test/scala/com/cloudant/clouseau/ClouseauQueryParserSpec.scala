@@ -63,6 +63,6 @@ class ClouseauQueryParserSpec extends SpecificationWithJUnit {
 }
 
 trait parser extends Scope {
-  val analyzer = new StandardAnalyzer(IndexService.version)
-  val parser = new ClouseauQueryParser(IndexService.version, "default", analyzer)
+  val analyzer = new StandardAnalyzer()
+  val parser = new ClouseauQueryParser("default", analyzer)
 }

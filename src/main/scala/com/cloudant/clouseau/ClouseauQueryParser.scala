@@ -19,13 +19,11 @@ import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.NumericRangeQuery
 import org.apache.lucene.search.Query
 import org.apache.lucene.search.TermQuery
-import org.apache.lucene.util.Version
 import org.apache.lucene.analysis.core.KeywordAnalyzer
 
-class ClouseauQueryParser(version: Version,
-                          defaultField: String,
+class ClouseauQueryParser(defaultField: String,
                           analyzer: Analyzer)
-    extends QueryParser(version, defaultField, analyzer) {
+    extends QueryParser(defaultField, analyzer) {
 
   // regexp from java.lang.Double
   val Digits = "(\\p{Digit}+)"

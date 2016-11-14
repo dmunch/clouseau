@@ -12,13 +12,13 @@
 
 package com.cloudant.clouseau
 
-import com.spatial4j.core.context.SpatialContext
-import com.spatial4j.core.shape.Point
+import org.locationtech.spatial4j.context.SpatialContext
+import org.locationtech.spatial4j.shape.Point
 import org.apache.lucene.queries.function.{ FunctionValues, ValueSource }
-import org.apache.lucene.index.{ AtomicReader, AtomicReaderContext }
-import org.apache.lucene.search.FieldCache
+import org.apache.lucene.index.{ LeafReader, LeafReaderContext }
+import org.apache.lucene.index.DocValues
 import org.apache.lucene.util.Bits
-import com.spatial4j.core.distance.DistanceCalculator
+import org.locationtech.spatial4j.distance.DistanceCalculator
 import java.util.Map
 
 /*
@@ -34,15 +34,14 @@ case class DistanceValueSource(ctx: SpatialContext,
 
   def description() = "DistanceValueSource(%s)".format(from)
 
-  def getValues(context: Map[_, _], readerContext: AtomicReaderContext) = {
-    val reader: AtomicReader = readerContext.reader
+  def getValues(context: Map[_, _], readerContext: LeafReaderContext) = {
+    val reader: LeafReader = readerContext.reader
 
-    val ptLon: FieldCache.Doubles = FieldCache.DEFAULT.getDoubles(reader,
-      lon, true)
-    val ptLat: FieldCache.Doubles = FieldCache.DEFAULT.getDoubles(reader,
-      lat, true)
-    val validLon: Bits = FieldCache.DEFAULT.getDocsWithField(reader, lon)
-    val validLat: Bits = FieldCache.DEFAULT.getDocsWithField(reader, lat)
+    val ptLon = DocValues.getNumeric(reader, lon)
+    val ptLat = DocValues.getNumeric(reader, lat)
+
+    val validLon = DocValues.getDocsWithField(reader, lon)
+    val validLat = DocValues.getDocsWithField(reader, lat)
 
     new FunctionValues {
 

@@ -54,8 +54,8 @@ import org.apache.lucene.facet.params.{ FacetIndexingParams, FacetSearchParams }
 import scala.Some
 import scalang.Pid
 import scalang.Reference
-import com.spatial4j.core.context.SpatialContext
-import com.spatial4j.core.distance.DistanceUtils
+import org.locationtech.spatial4j.context.SpatialContext
+import org.locationtech.spatial4j.distance.DistanceUtils
 
 case class IndexServiceArgs(config: Configuration, name: String, queryParser: QueryParser, writer: IndexWriter)
 case class HighlightParameters(highlighter: Highlighter, highlightFields: List[String], highlightNumber: Int, analyzers: List[Analyzer])
@@ -755,7 +755,6 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
 
 object IndexService {
 
-  val version = Version.LUCENE_46
   val INVERSE_FIELD_SCORE = new SortField(null, SortField.Type.SCORE, true)
   val INVERSE_FIELD_DOC = new SortField(null, SortField.Type.DOC, true)
   val SORT_FIELD_RE = """^([-+])?([\.\w]+)(?:<(\w+)>)?$""".r
@@ -768,8 +767,8 @@ object IndexService {
     try {
       SupportedAnalyzers.createAnalyzer(options) match {
         case Some(analyzer) =>
-          val queryParser = new ClouseauQueryParser(version, "default", analyzer)
-          val writerConfig = new IndexWriterConfig(version, analyzer)
+          val queryParser = new ClouseauQueryParser("default", analyzer)
+          val writerConfig = new IndexWriterConfig(analyzer)
           val writer = new IndexWriter(dir, writerConfig)
           ('ok, node.spawnService[IndexService, IndexServiceArgs](IndexServiceArgs(config, path, queryParser, writer)))
         case None =>
