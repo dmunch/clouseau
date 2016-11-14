@@ -34,11 +34,11 @@ class ClouseauQueryParserSpec extends SpecificationWithJUnit {
     }
 
     "support numeric range queries (integer)" in new parser {
-      parser.parse("foo:[1 TO 2]") must haveClass[NumericRangeQuery[JDouble]]
+      parser.parse("foo:[1 TO 2]") must haveClass[LegacyNumericRangeQuery[JDouble]]
     }
 
     "support numeric range queries (float)" in new parser {
-      parser.parse("foo:[1.0 TO 2.0]") must haveClass[NumericRangeQuery[JDouble]]
+      parser.parse("foo:[1.0 TO 2.0]") must haveClass[LegacyNumericRangeQuery[JDouble]]
     }
 
     "support numeric term queries (integer)" in new parser {

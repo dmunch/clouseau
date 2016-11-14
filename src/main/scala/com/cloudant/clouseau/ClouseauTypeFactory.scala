@@ -140,7 +140,7 @@ object ClouseauTypeFactory extends TypeFactory {
       val map = options.toMap
       toDouble(value) match {
         case Some(doubleValue) =>
-          doc.add(new DoubleField(name, doubleValue, toStore(map)))
+          doc.add(new LegacyDoubleField(name, doubleValue, toStore(map)))
           if (isFacet(map)) {
             doc.add(new DoubleDocValuesField(name, doubleValue))
           }

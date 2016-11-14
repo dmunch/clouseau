@@ -16,7 +16,7 @@ import java.util.regex.Pattern
 
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.NumericRangeQuery
+import org.apache.lucene.search.LegacyNumericRangeQuery
 import org.apache.lucene.search.Query
 import org.apache.lucene.search.TermQuery
 import org.apache.lucene.analysis.core.KeywordAnalyzer
@@ -60,7 +60,7 @@ class ClouseauQueryParser(defaultField: String,
                              startInclusive: Boolean,
                              endInclusive: Boolean): Query = {
     if (isNumber(lower) && isNumber(upper)) {
-      NumericRangeQuery.newDoubleRange(field, 8, lower.toDouble,
+      LegacyNumericRangeQuery.newDoubleRange(field, 8, lower.toDouble,
         upper.toDouble, startInclusive, endInclusive)
     } else {
       setLowercaseExpandedTerms(field)

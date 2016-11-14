@@ -40,7 +40,7 @@ object QueryExplainer {
     builder.append(query.getMaxEdits)
   }
 
-  private def planNumericRangeQuery(builder: StringBuilder, query: NumericRangeQuery[_]) {
+  private def planLegacyNumericRangeQuery(builder: StringBuilder, query: LegacyNumericRangeQuery[_]) {
     builder.append(query.getMin)
     builder.append(" TO ")
     builder.append(query.getMax)
@@ -82,8 +82,8 @@ object QueryExplainer {
         planWildcardQuery(builder, query)
       case query: FuzzyQuery =>
         planFuzzyQuery(builder, query)
-      case query: NumericRangeQuery[_] =>
-        planNumericRangeQuery(builder, query)
+      case query: LegacyNumericRangeQuery[_] =>
+        planLegacyNumericRangeQuery(builder, query)
       case _ =>
         builder.append(query)
     }

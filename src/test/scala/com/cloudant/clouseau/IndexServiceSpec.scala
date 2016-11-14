@@ -320,10 +320,10 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
       val doc1 = new Document()
       doc1.add(new StringField("_id", "foo", Field.Store.YES))
-      doc1.add(new DoubleField("num", 1.0, Field.Store.YES))
+      doc1.add(new LegacyDoubleField("num", 1.0, Field.Store.YES))
       val doc2 = new Document()
       doc2.add(new StringField("_id", "bar", Field.Store.YES))
-      doc1.add(new DoubleField("num", 2.0, Field.Store.YES))
+      doc1.add(new LegacyDoubleField("num", 2.0, Field.Store.YES))
 
       node.call(service, UpdateDocMsg("foo", doc1)) must be equalTo 'ok
       node.call(service, UpdateDocMsg("bar", doc2)) must be equalTo 'ok
@@ -353,18 +353,18 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
       val doc1 = new Document()
       doc1.add(new StringField("_id", "foo", Field.Store.YES))
-      doc1.add(new DoubleField("lon", 0.5, Field.Store.YES))
-      doc1.add(new DoubleField("lat", 57.15, Field.Store.YES))
+      doc1.add(new LegacyDoubleField("lon", 0.5, Field.Store.YES))
+      doc1.add(new LegacyDoubleField("lat", 57.15, Field.Store.YES))
 
       val doc2 = new Document()
       doc2.add(new StringField("_id", "bar", Field.Store.YES))
-      doc1.add(new DoubleField("lon", 10, Field.Store.YES))
-      doc1.add(new DoubleField("lat", 57.15, Field.Store.YES))
+      doc1.add(new LegacyDoubleField("lon", 10, Field.Store.YES))
+      doc1.add(new LegacyDoubleField("lat", 57.15, Field.Store.YES))
 
       val doc3 = new Document()
       doc3.add(new StringField("_id", "zzz", Field.Store.YES))
-      doc3.add(new DoubleField("lon", 3, Field.Store.YES))
-      doc3.add(new DoubleField("lat", 57.15, Field.Store.YES))
+      doc3.add(new LegacyDoubleField("lon", 3, Field.Store.YES))
+      doc3.add(new LegacyDoubleField("lat", 57.15, Field.Store.YES))
 
       node.call(service, UpdateDocMsg("foo", doc1)) must be equalTo 'ok
       node.call(service, UpdateDocMsg("bar", doc2)) must be equalTo 'ok
