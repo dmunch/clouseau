@@ -13,6 +13,7 @@
 package com.cloudant.clouseau
 
 import java.lang.{ StringBuilder, String }
+import scala.collection.JavaConversions._
 import org.apache.lucene.search._
 
 object QueryExplainer {
@@ -24,7 +25,7 @@ object QueryExplainer {
   }
 
   private def planBooleanQuery(builder: StringBuilder, query: BooleanQuery) {
-    for (clause <- query.getClauses) {
+    for (clause <- query.clauses) {
       builder.append(clause.getOccur)
       explain(builder, clause.getQuery)
       builder.append(" ")
@@ -70,6 +71,10 @@ object QueryExplainer {
     builder.append(query.getClass.getSimpleName)
     builder.append("(")
     query match {
+      case query: BoostQuery =>
+        builder.append("(")
+        explain(builder, query.getQuery)
+        builder.append(",boost=" + query.getBoost + ")")
       case query: TermQuery =>
         planTermQuery(builder, query)
       case query: BooleanQuery =>
@@ -87,6 +92,6 @@ object QueryExplainer {
       case _ =>
         builder.append(query)
     }
-    builder.append(",boost=" + query.getBoost + ")")
+    builder.append(")")
   }
 }

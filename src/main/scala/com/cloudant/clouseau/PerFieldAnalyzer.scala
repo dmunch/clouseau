@@ -16,7 +16,8 @@ import org.apache.lucene.analysis._
 import org.apache.lucene.analysis.Analyzer._
 
 class PerFieldAnalyzer(defaultAnalyzer: Analyzer,
-                       map: Map[String, Analyzer]) extends AnalyzerWrapper {
+                       map: Map[String, Analyzer])
+    extends AnalyzerWrapper(defaultAnalyzer.getReuseStrategy()) {
 
   def getWrappedAnalyzer(fieldName: String): Analyzer = {
     map.getOrElse(fieldName, defaultAnalyzer)

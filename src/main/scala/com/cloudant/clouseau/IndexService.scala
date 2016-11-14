@@ -68,7 +68,7 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
   override val metricRegistry = new MetricRegistry()
 
   val logger = Logger.getLogger("clouseau.%s".format(ctx.args.name))
-  var reader = DirectoryReader.open(ctx.args.writer, true)
+  var reader = DirectoryReader.open(ctx.args.writer, true, false)
   var updateSeq = getCommittedSeq
   var pendingSeq = updateSeq
   var committing = false
