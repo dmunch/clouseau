@@ -786,17 +786,24 @@ object IndexService {
     }
   }
 
-  private def newDirectory(config: Configuration, path: File): Directory = {
-    val lockClassName = config.getString("clouseau.lock_class",
-      "org.apache.lucene.store.NativeFSLockFactory")
-    val lockClass = Class.forName(lockClassName)
-    val lockFactory = lockClass.newInstance().asInstanceOf[LockFactory]
+  private def newDirectory(config: Configuration, path: File): Directory = {    
+    //val lockClassName = config.getString("clouseau.lock_class",
+    //  "org.apache.lucene.store.NativeFSLockFactory")
+    //val lockClass = Class.forName(lockClassName)
+    //val lockFactory = lockClass.newInstance().asInstanceOf[LockFactory]
 
-    val dirClassName = config.getString("clouseau.dir_class",
-      "org.apache.lucene.store.NIOFSDirectory")
-    val dirClass = Class.forName(dirClassName)
-    val dirCtor = dirClass.getConstructor(classOf[File], classOf[LockFactory])
-    dirCtor.newInstance(path, lockFactory).asInstanceOf[Directory]
+    //val dirClassName = config.getString("clouseau.dir_class",
+    //  "org.apache.lucene.store.NIOFSDirectory")
+    //val dirClass = Class.forName(dirClassName)
+    //val dirCtor = dirClass.getConstructor(classOf[File], classOf[LockFactory])
+    //dirCtor.newInstance(path, lockFactory).asInstanceOf[Directory]
+    
+    //TODO make this configurable again.
+    new NIOFSDirectory(path.toPath(), NativeFSLockFactory.INSTANCE)
+
+    //Consider using the following way of creating directories which 
+    //automatically picks the best platform implementation:
+    //FSDirectory.open(path.toPath())
   }
 
 }
