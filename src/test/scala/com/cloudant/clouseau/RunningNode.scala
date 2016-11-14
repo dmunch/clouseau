@@ -25,9 +25,9 @@ trait RunningNode extends BeforeAfter {
   }
 
   def after {
+    node.shutdown
     epmd.destroy()
     epmd.waitFor
-    node.shutdown
   }
 
 }
