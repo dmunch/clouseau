@@ -105,7 +105,7 @@ object ClouseauTypeFactory extends TypeFactory {
   private def addFields(doc: Document, field0: Any): Unit = field0 match {
     case (name: String, value: String, options: List[(String, Any)]) =>
       val map = options.toMap
-      constructField(name, value, toStore(map), toIndex(map), toTermVector(map)) match {
+      constructField(name, value, toFieldType(map)) match {
         case Some(field) =>
           map.get("boost") match {
             case Some(boost: Number) =>
@@ -129,7 +129,8 @@ object ClouseauTypeFactory extends TypeFactory {
       }
     case (name: String, value: Boolean, options: List[(String, Any)]) =>
       val map = options.toMap
-      constructField(name, value.toString, toStore(map), Index.NOT_ANALYZED, toTermVector(map)) match {
+      //constructField(name, value.toString, toStore(map), Index.NOT_ANALYZED, toTermVector(map)) match {
+      constructField(name, value.toString, toFieldType(map)) match {
         case Some(field) =>
           doc.add(field)
           'ok
@@ -151,9 +152,9 @@ object ClouseauTypeFactory extends TypeFactory {
       }
   }
 
-  private def constructField(name: String, value: String, store: Store, index: Index, tv: TermVector): Option[Field] = {
+  private def constructField(name: String, value: String, fieldType: FieldType): Option[Field] = {
     try {
-      Some(new Field(name, value, store, index, tv))
+      Some(new Field(name, value, fieldType))
     } catch {
       case e: IllegalArgumentException =>
         logger.error("Failed to construct field '%s' with reason '%s'".format(name, e.getMessage))
@@ -163,6 +164,19 @@ object ClouseauTypeFactory extends TypeFactory {
         None
     }
   }
+
+  //private def constructField(name: String, value: String, store: Store, index: Index, tv: TermVector): Option[Field] = {
+  //  try {
+  //    Some(new Field(name, value, store, index, tv))
+  //  } catch {
+  //    case e: IllegalArgumentException =>
+  //      logger.error("Failed to construct field '%s' with reason '%s'".format(name, e.getMessage))
+  //      None
+  //    case e: NullPointerException =>
+  //      logger.error("Failed to construct field '%s' with reason '%s'".format(name, e.getMessage))
+  //      None
+  //  }
+  //}
 
   // These to* methods are stupid.
 
@@ -192,6 +206,10 @@ object ClouseauTypeFactory extends TypeFactory {
     case v: java.lang.Long => v.intValue
   }
 
+  def toFieldType(options: Map[String, Any]): FieldType = {
+    TextField.TYPE_STORED
+  }
+
   def toStore(options: Map[String, Any]): Store = {
     options.getOrElse("store", "no") match {
       case true => Store.YES
@@ -208,26 +226,26 @@ object ClouseauTypeFactory extends TypeFactory {
     }
   }
 
-  def toIndex(options: Map[String, Any]): Index = {
-    options.getOrElse("index", "analyzed") match {
-      case true => Index.ANALYZED
-      case false => Index.NO
-      case str: String =>
-        try {
-          Index.valueOf(str toUpperCase)
-        } catch {
-          case _: IllegalArgumentException =>
-            Index.ANALYZED
-        }
-      case _ =>
-        Index.ANALYZED
-    }
-  }
+  //def toIndex(options: Map[String, Any]): Index = {
+  //  options.getOrElse("index", "analyzed") match {
+  //    case true => Index.ANALYZED
+  //    case false => Index.NO
+  //    case str: String =>
+  //      try {
+  //        Index.valueOf(str toUpperCase)
+  //      } catch {
+  //        case _: IllegalArgumentException =>
+  //          Index.ANALYZED
+  //      }
+  //    case _ =>
+  //      Index.ANALYZED
+  //  }
+  //}
 
-  def toTermVector(options: Map[String, Any]): TermVector = {
-    val termVector = options.getOrElse("termvector", "no").asInstanceOf[String]
-    TermVector.valueOf(termVector toUpperCase)
-  }
+  //def toTermVector(options: Map[String, Any]): TermVector = {
+  //  val termVector = options.getOrElse("termvector", "no").asInstanceOf[String]
+  //  TermVector.valueOf(termVector toUpperCase)
+  //}
 
   def isFacet(options: Map[String, Any]) = {
     options.get("facet") match {
