@@ -272,8 +272,7 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
           }
 
           val searcher = getSearcher(refresh)
-          val weight = searcher.createNormalizedWeight(query)
-          val docsScoredInOrder = !weight.scoresDocsOutOfOrder
+          val weight = searcher.createNormalizedWeight(query, false) //CHECK, true?
 
           val sort = parseSort(request.options.getOrElse('sort, 'relevance)).rewrite(searcher)
           val after = toScoreDoc(sort, request.options.getOrElse('after, 'nil))
@@ -282,15 +281,13 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
             case (0, _, _) =>
               new TotalHitCountCollector
             case (_, None, Sort.RELEVANCE) =>
-              TopScoreDocCollector.create(limit, docsScoredInOrder)
+              TopScoreDocCollector.create(limit)
             case (_, Some(scoreDoc), Sort.RELEVANCE) =>
-              TopScoreDocCollector.create(limit, scoreDoc, docsScoredInOrder)
+              TopScoreDocCollector.create(limit, scoreDoc)
             case (_, None, sort1: Sort) =>
-              TopFieldCollector.create(sort1, limit, true, false, false,
-                docsScoredInOrder)
+              TopFieldCollector.create(sort1, limit, true, false, false)
             case (_, Some(fieldDoc: FieldDoc), sort1: Sort) =>
-              TopFieldCollector.create(sort1, limit, fieldDoc, true, false,
-                false, docsScoredInOrder)
+              TopFieldCollector.create(sort1, limit, fieldDoc, true, false, false)
           }
 
           //val countsCollector = createCountsCollector(counts)
