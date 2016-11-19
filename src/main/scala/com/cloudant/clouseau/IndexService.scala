@@ -48,9 +48,14 @@ import org.apache.lucene.facet.{
   FacetsCollector,
   FacetsConfig,
   Facets,
+  FacetResult,
   DrillDownQuery
 }
 
+import org.apache.lucene.facet.range.{
+  DoubleRange,
+  DoubleRangeFacetCounts
+}
 //import org.apache.lucene.facet.range.{
 //  DoubleRange,
 //  RangeAccumulator,
@@ -294,40 +299,39 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
               TopFieldCollector.create(sort1, limit, fieldDoc, true, false, false)
           }
 
-          //val rangesCollector = ranges match {
-          //  case None =>
-          //    null
-          //  case Some(rangeList: List[_]) =>
-          //    val rangeFacetRequests = for ((name: String, ranges: List[_]) <- rangeList) yield {
-          //      new RangeFacetRequest(name, ranges.map({
-          //        case (label: String, rangeQuery: String) =>
-          //          ctx.args.queryParser.parse(rangeQuery) match {
-          //            case q: LegacyNumericRangeQuery[_] =>
-          //             new DoubleRange(
-          //                label,
-          //                ClouseauTypeFactory.toDouble(q.getMin).get,
-          //                q.includesMin,
-          //                ClouseauTypeFactory.toDouble(q.getMax).get,
-          //                q.includesMax)
-          //            case _ =>
-          //              throw new ParseException(rangeQuery +
-          //                " was not a well-formed range specification")
-          //          }
-          //        case _ =>
-          //          throw new ParseException("invalid ranges query")
-          //      }))
-          //    }
-          //    val acc = new RangeAccumulator(rangeFacetRequests)
-          //    FacetsCollector.create(acc)
-          //  case Some(other) =>
-          //    throw new ParseException(other + " is not a valid ranges query")
-          //}
-          //
-          //val collector = MultiCollector.wrap(
-          //  hitsCollector, countsCollector, rangesCollector)
-
-          val fc = counts match {
+          //Attention, currently we use only DoubleRange
+          //Those tests will fail if we index rfield as NumericDocValuesField
+          //There should probably be differentiation between DoubleRange and LongRange queries 
+          val doubleRanges = ranges match {
             case None =>
+              None
+            case Some(rangeList: List[_]) =>
+              Some(for ((field: String, ranges: List[_]) <- rangeList) yield {
+                (field, ranges.map({
+                  case (label: String, rangeQuery: String) =>
+                    ctx.args.queryParser.parse(rangeQuery) match {
+                      case q: LegacyNumericRangeQuery[_] => {
+                        new DoubleRange(
+                          label,
+                          ClouseauTypeFactory.toDouble(q.getMin).get,
+                          q.includesMin,
+                          ClouseauTypeFactory.toDouble(q.getMax).get,
+                          q.includesMax)
+                      }
+                      case _ =>
+                        throw new ParseException(rangeQuery +
+                          " was not a well-formed range specification")
+                    }
+                  case _ =>
+                    throw new ParseException("invalid ranges query")
+                }))
+              })
+            case Some(other) =>
+              throw new ParseException(other + " is not a valid ranges query")
+          }
+
+          val fc = (counts, doubleRanges) match {
+            case (None, None) =>
               null
             case _ =>
               new FacetsCollector()
@@ -352,7 +356,7 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
               ('hits, hits)
             )
               ++ convertCountFacets('counts, fc, counts)
-            //++ convertFacets('ranges, rangesCollector)
+              ++ convertRangeFacets('ranges, fc, doubleRanges)
             )
           }
         }
@@ -368,12 +372,24 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
       val state = new DefaultSortedSetDocValuesReaderState(reader)
       val facetCounts = new SortedSetDocValuesFacetCounts(state, fc)
 
-      convertFacets(name, facetCounts, counts)
+      convertFacets(name, counts.map { dim => facetCounts.getTopChildren(10, dim) })
     }
   }
 
-  private def convertFacets(name: Symbol, c: Facets, options: List[String]): List[_] = {    
-    val facetResults = options.map { dim => c.getTopChildren(10, dim) }
+  private def convertRangeFacets(name: Symbol, fc: FacetsCollector, ranges: Option[List[_]]) = ranges match {
+    case None =>
+      Nil
+    case Some(ranges: List[Any]) => {
+      val facetResults = for ((field: String, range: List[DoubleRange]) <- ranges) yield {
+        var dbfc = new DoubleRangeFacetCounts(field, fc, range.toArray: _*)
+        dbfc.getTopChildren(10, field)
+      }
+
+      convertFacets(name, facetResults)
+    }
+  }
+
+  private def convertFacets(name: Symbol, facetResults: List[FacetResult]): List[_] = {
     List((name, facetResults.map { fr =>
       (
         List(fr.dim),

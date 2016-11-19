@@ -244,6 +244,40 @@ class IndexServiceSpec extends SpecificationWithJUnit {
         })
     }
 
+    "support range facets" in new index_service {
+      //Attention, currently we use only DoubleRange
+      //Those tests will fail if we index rfield as NumericDocValuesField
+      //There should probably be differentiation between DoubleRange and LongRange queries  
+      //
+      val doc1 = new Document()
+      doc1.add(new StringField("_id", "foo", Field.Store.YES))
+      doc1.add(new DoubleDocValuesField("rfield", 1))
+
+      val doc2 = new Document()
+      doc2.add(new StringField("_id", "foo2", Field.Store.YES))
+      doc2.add(new DoubleDocValuesField("rfield", 2))
+
+      val doc3 = new Document()
+      doc3.add(new StringField("_id", "foo3", Field.Store.YES))
+      doc3.add(new DoubleDocValuesField("rfield", 10))
+
+      node.call(service, UpdateDocMsg("foo", doc1)) must be equalTo 'ok
+      node.call(service, UpdateDocMsg("foo2", doc2)) must be equalTo 'ok
+      node.call(service, UpdateDocMsg("foo3", doc3)) must be equalTo 'ok
+
+      //ranges
+      (node.call(service, SearchRequest(options =
+        Map('ranges -> List(("rfield", List(("underFive", "[0 TO 5]"), ("overFive", "[5 TO 10]")))))))
+        must beLike {
+          case ('ok, List(_, ('total_hits, 3), _,
+            ('ranges, List((
+              List("rfield"), 3.0, List(
+                (List("rfield", "underFive"), 2.0, List()),
+                (List("rfield", "overFive"), 1.0, List()))
+              ))))) => ok
+        })
+    }
+
     "support bookmarks" in new index_service {
       val foo = new BytesRef("foo")
       val bar = new BytesRef("bar")
