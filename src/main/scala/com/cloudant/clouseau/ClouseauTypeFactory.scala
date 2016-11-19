@@ -21,9 +21,9 @@ import scala.collection.JavaConversions._
 import scalang._
 import org.jboss.netty.buffer.ChannelBuffer
 import org.apache.lucene.util.BytesRef
-//import org.apache.lucene.facet.params.FacetIndexingParams
-//import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetFields
-//import org.apache.lucene.facet.taxonomy.CategoryPath
+import org.apache.lucene.facet.FacetsConfig
+import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField
+
 import scala.collection.mutable.ArrayBuffer
 
 case class SearchRequest(options: Map[Symbol, Any])
@@ -45,6 +45,7 @@ case class SetUpdateSeqMsg(seq: Long)
 object ClouseauTypeFactory extends TypeFactory {
 
   val logger = Logger.getLogger("clouseau.tf")
+  val facetsConfig = new FacetsConfig()
 
   def createType(name: Symbol, arity: Int, reader: TermReader): Option[Any] = (name, arity) match {
     case ('open, 4) =>
@@ -99,7 +100,7 @@ object ClouseauTypeFactory extends TypeFactory {
     for (field <- reader.readAs[List[Any]]) {
       addFields(result, field)
     }
-    result
+    facetsConfig.build(result)
   }
 
   private def addFields(doc: Document, field0: Any): Unit = field0 match {
@@ -115,14 +116,10 @@ object ClouseauTypeFactory extends TypeFactory {
               'ok
           }
           doc.add(field)
-          //if (isFacet(map) && value.nonEmpty) {
-          //  val fp = FacetIndexingParams.DEFAULT
-          //  val delim = fp.getFacetDelimChar
-          //  if (!name.contains(delim) && !value.contains(delim)) {
-          //    val facets = new SortedSetDocValuesFacetFields(fp)
-          //    facets.addFields(doc, List(new CategoryPath(name, value)))
-          //  }
-          //}
+          if (isFacet(map) && value.nonEmpty) {
+            doc.add(new SortedSetDocValuesFacetField(name, value))
+          }
+
           'ok
         case None =>
           'ok

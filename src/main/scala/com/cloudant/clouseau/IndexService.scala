@@ -39,10 +39,18 @@ import com.codahale.metrics._
 import nl.grons.metrics.scala.InstrumentedBuilder
 import com.cloudant.clouseau.Utils._
 import org.apache.commons.configuration.Configuration
-//import org.apache.lucene.facet.sortedset.{
-//  SortedSetDocValuesReaderState,
-//  SortedSetDocValuesAccumulator
-//}
+
+import org.apache.lucene.facet.sortedset.{
+  DefaultSortedSetDocValuesReaderState,
+  SortedSetDocValuesFacetCounts
+}
+import org.apache.lucene.facet.{
+  FacetsCollector,
+  FacetsConfig,
+  Facets,
+  DrillDownQuery
+}
+
 //import org.apache.lucene.facet.range.{
 //  DoubleRange,
 //  RangeAccumulator,
@@ -240,33 +248,29 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
           val query = request.options.getOrElse('drilldown, Nil) match {
             case Nil =>
               baseQuery
-            //DrillDownQuery currently disabled
-            //case categories: List[List[String]] =>
-            //  val drilldownQuery = new DrillDownQuery(
-            //    FacetIndexingParams.DEFAULT, baseQuery)
-            //  for (category <- categories) {
-            //    val category1 = category.toArray
-            //    val len = category1.length
-            //    try {
-            //      if (len < 3) {
-            //        drilldownQuery.add(new CategoryPath(category1: _*))
-            //      } else { //if there are multiple values OR'd them, delete this else part after updating to Apache Lucene > 4.6
-            //        val dim = category1(0)
-            //        val categoryPaths: Array[CategoryPath] = new Array[CategoryPath](len - 1)
-            //        for (i <- 1 until len) {
-            //          categoryPaths(i - 1) = new CategoryPath(Array(dim, category1(i)): _*)
-            //        }
-            //        drilldownQuery.add(categoryPaths: _*)
-            //      }
-            //    } catch {
-            //      case e: IllegalArgumentException =>
-            //        throw new ParseException(e.getMessage)
-            //      case e: ArrayStoreException =>
-            //        throw new ParseException(category +
-            //          " contains a non-string item")
-            //    }
-            //  }
-            //  drilldownQuery
+            case categories: List[List[String]] =>
+              val drilldownQuery = new DrillDownQuery(
+                new FacetsConfig(), baseQuery)
+              for (category <- categories) {
+                val dim = category.head
+                try {
+                  for (label <- category.tail) {
+                    drilldownQuery.add(dim, label)
+                  }
+                } catch {
+                  case e: IllegalArgumentException => {
+                    logger.info(e.getMessage)
+                    throw new ParseException(e.getMessage)
+                  }
+                  case e: ArrayStoreException => {
+                    logger.info(category +
+                      " contains a non-string item")
+                    throw new ParseException(category +
+                      " contains a non-string item")
+                  }
+                }
+              }
+              drilldownQuery
             case _ =>
               throw new ParseException("invalid drilldown query")
           }
@@ -290,8 +294,6 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
               TopFieldCollector.create(sort1, limit, fieldDoc, true, false, false)
           }
 
-          //val countsCollector = createCountsCollector(counts)
-          //
           //val rangesCollector = ranges match {
           //  case None =>
           //    null
@@ -324,7 +326,13 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
           //val collector = MultiCollector.wrap(
           //  hitsCollector, countsCollector, rangesCollector)
 
-          val collector = MultiCollector.wrap(hitsCollector)
+          val fc = counts match {
+            case None =>
+              null
+            case _ =>
+              new FacetsCollector()
+          }
+          val collector = MultiCollector.wrap(hitsCollector, fc)
 
           searchTimer.time {
             searcher.search(query, collector)
@@ -343,7 +351,7 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
               ('total_hits, getTotalHits(hitsCollector)),
               ('hits, hits)
             )
-            //++ convertFacets('counts, countsCollector)
+              ++ convertCountFacets('counts, fc, counts)
             //++ convertFacets('ranges, rangesCollector)
             )
           }
@@ -351,6 +359,28 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
       case error =>
         error
     }
+  }
+
+  private def convertCountFacets(name: Symbol, fc: FacetsCollector, dims: Option[Any]): List[_] = dims match {
+    case None =>
+      Nil
+    case Some(counts: List[String]) => {
+      val state = new DefaultSortedSetDocValuesReaderState(reader)
+      val facetCounts = new SortedSetDocValuesFacetCounts(state, fc)
+
+      convertFacets(name, facetCounts, counts)
+    }
+  }
+
+  private def convertFacets(name: Symbol, c: Facets, options: List[String]): List[_] = {    
+    val facetResults = options.map { dim => c.getTopChildren(10, dim) }
+    List((name, facetResults.map { fr =>
+      (
+        List(fr.dim),
+        fr.value,
+        fr.labelValues.map { lv => (List(fr.dim, lv.label), lv.value, List()) }.toList
+      )
+    }.toList))
   }
 
   private def getTotalHits(collector: Collector) = collector match {
@@ -368,37 +398,6 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
       case c: TotalHitCountCollector =>
         Nil
     }
-
-
-  //private def createCountsCollector(counts: Option[Any]): FacetsCollector = {
-  //  counts match {
-  //    case None =>
-  //      null
-  //    case Some(counts: List[String]) =>
-  //      val state = try {
-  //        new SortedSetDocValuesReaderState(reader)
-  //      } catch {
-  //        case e: IllegalArgumentException =>
-  //          if (e.getMessage contains "was not indexed with SortedSetDocValues")
-  //            return null
-  //          else
-  //            throw e
-  //      }
-  //      val countFacetRequests = for (count <- counts) yield {
-  //        new CountFacetRequest(new CategoryPath(count), Int.MaxValue)
-  //      }
-  //      val facetSearchParams = new FacetSearchParams(countFacetRequests)
-  //      val acc = try {
-  //        new SortedSetDocValuesAccumulator(state, facetSearchParams)
-  //      } catch {
-  //        case e: IllegalArgumentException =>
-  //          throw new ParseException(e.getMessage)
-  //      }
-  //      FacetsCollector.create(acc)
-  //    case Some(other) =>
-  //      throw new ParseException(other + " is not a valid counts query")
-  //  }
-  //}
 
   private def group1(queryString: String, field: String, refresh: Boolean, groupSort: Any,
                      groupOffset: Int, groupLimit: Int): Any = parseQuery(queryString) match {
