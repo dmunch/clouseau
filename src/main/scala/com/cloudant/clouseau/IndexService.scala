@@ -70,7 +70,7 @@ import scalang.Reference
 import org.locationtech.spatial4j.context.SpatialContext
 import org.locationtech.spatial4j.distance.DistanceUtils
 
-case class IndexServiceArgs(config: Configuration, name: String, queryParser: QueryParser, writer: IndexWriter)
+case class IndexServiceArgs(config: Configuration, name: String, queryParser: QueryParser, rangeQueryParser: QueryParser, writer: IndexWriter)
 case class HighlightParameters(highlighter: Highlighter, highlightFields: List[String], highlightNumber: Int, analyzers: List[Analyzer])
 
 // These must match the records in dreyfus.
@@ -309,7 +309,7 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
               Some(for ((field: String, ranges: List[_]) <- rangeList) yield {
                 (field, ranges.map({
                   case (label: String, rangeQuery: String) =>
-                    ctx.args.queryParser.parse(rangeQuery) match {
+                    ctx.args.rangeQueryParser.parse(rangeQuery) match {
                       case q: LegacyNumericRangeQuery[_] => {
                         new DoubleRange(
                           label,
@@ -786,9 +786,10 @@ object IndexService {
       SupportedAnalyzers.createAnalyzer(options) match {
         case Some(analyzer) =>
           val queryParser = new ClouseauQueryParser("default", analyzer)
+          val rangeQueryParser = new LegacyClouseauQueryParser("default", analyzer)
           val writerConfig = new IndexWriterConfig(analyzer)
           val writer = new IndexWriter(dir, writerConfig)
-          ('ok, node.spawnService[IndexService, IndexServiceArgs](IndexServiceArgs(config, path, queryParser, writer)))
+          ('ok, node.spawnService[IndexService, IndexServiceArgs](IndexServiceArgs(config, path, queryParser, rangeQueryParser, writer)))
         case None =>
           ('error, 'no_such_analyzer)
       }

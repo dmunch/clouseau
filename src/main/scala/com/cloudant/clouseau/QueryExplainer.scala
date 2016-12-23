@@ -49,6 +49,11 @@ object QueryExplainer {
     builder.append(query.getMin.getClass.getSimpleName)
   }
 
+  private def planPointRangeQuery(builder: StringBuilder, query: PointRangeQuery) {
+    //no default field to be omitted
+    builder.append(query.toString(null))
+  }
+
   private def planPrefixQuery(builder: StringBuilder, query: PrefixQuery) {
     builder.append(query.getPrefix)
   }
@@ -89,6 +94,8 @@ object QueryExplainer {
         planFuzzyQuery(builder, query)
       case query: LegacyNumericRangeQuery[_] =>
         planLegacyNumericRangeQuery(builder, query)
+      case query: PointRangeQuery =>
+        planPointRangeQuery(builder, query)
       case _ =>
         builder.append(query)
     }

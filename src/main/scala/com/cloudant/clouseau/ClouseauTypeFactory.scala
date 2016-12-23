@@ -143,8 +143,12 @@ object ClouseauTypeFactory extends TypeFactory {
       val map = options.toMap
       toDouble(value) match {
         case Some(doubleValue) =>
-          doc.add(new LegacyDoubleField(name, doubleValue, toStore(map)))
+          doc.add(new DoublePoint(name, doubleValue))
+          toStore(map) match {
+            case Store.YES => doc.add(new StoredField(name, doubleValue))
+          }
           doc.add(new DoubleDocValuesField(name, doubleValue))
+
           //TODO re-check if we need the docvalues field only for facets or if it's save
           //to always add it
           //if (isFacet(map)) {

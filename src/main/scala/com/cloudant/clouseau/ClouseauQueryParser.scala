@@ -20,6 +20,7 @@ import org.apache.lucene.search.LegacyNumericRangeQuery
 import org.apache.lucene.search.Query
 import org.apache.lucene.search.TermQuery
 import org.apache.lucene.analysis.core.KeywordAnalyzer
+import org.apache.lucene.document.DoublePoint
 
 class ClouseauQueryParser(defaultField: String,
                           analyzer: Analyzer)
@@ -55,16 +56,18 @@ class ClouseauQueryParser(defaultField: String,
   val fpRegex = Pattern.compile(fpRegexStr)
 
   override def getRangeQuery(field: String,
-                             lower: String,
-                             upper: String,
+                             lowerStr: String,
+                             upperStr: String,
                              startInclusive: Boolean,
                              endInclusive: Boolean): Query = {
-    if (isNumber(lower) && isNumber(upper)) {
-      LegacyNumericRangeQuery.newDoubleRange(field, 8, lower.toDouble,
-        upper.toDouble, startInclusive, endInclusive)
+    if (isNumber(lowerStr) && isNumber(upperStr)) {
+      val lower = if (startInclusive) lowerStr.toDouble else Math.nextUp(lowerStr.toDouble)
+      val upper = if (endInclusive) upperStr.toDouble else Math.nextDown(upperStr.toDouble)
+
+      DoublePoint.newRangeQuery(field, lower, upper)
     } else {
       setLowercaseExpandedTerms(field)
-      super.getRangeQuery(field, lower, upper, startInclusive, endInclusive)
+      super.getRangeQuery(field, lowerStr, upperStr, startInclusive, endInclusive)
     }
   }
 
@@ -99,11 +102,11 @@ class ClouseauQueryParser(defaultField: String,
     super.getWildcardQuery(field, termStr)
   }
 
-  private def isNumber(str: String): Boolean = {
+  protected def isNumber(str: String): Boolean = {
     fpRegex.matcher(str).matches()
   }
 
-  private def setLowercaseExpandedTerms(field: String) {
+  protected def setLowercaseExpandedTerms(field: String) {
     getAnalyzer match {
       case a: PerFieldAnalyzer =>
         setLowercaseExpandedTerms(a.getWrappedAnalyzer(field))
@@ -116,4 +119,25 @@ class ClouseauQueryParser(defaultField: String,
     setLowercaseExpandedTerms(!analyzer.isInstanceOf[KeywordAnalyzer])
   }
 
+}
+
+//Currently needed to transport lower, upper, startInclusive and endInclusive
+//to facet range query. 
+class LegacyClouseauQueryParser(defaultField: String,
+                                analyzer: Analyzer)
+    extends ClouseauQueryParser(defaultField, analyzer) {
+
+  override def getRangeQuery(field: String,
+                             lowerStr: String,
+                             upperStr: String,
+                             startInclusive: Boolean,
+                             endInclusive: Boolean): Query = {
+    if (isNumber(lowerStr) && isNumber(upperStr)) {
+      LegacyNumericRangeQuery.newDoubleRange(field, 8, lowerStr.toDouble,
+        upperStr.toDouble, startInclusive, endInclusive)
+    } else {
+      setLowercaseExpandedTerms(field)
+      super.getRangeQuery(field, lowerStr, upperStr, startInclusive, endInclusive)
+    }
+  }
 }

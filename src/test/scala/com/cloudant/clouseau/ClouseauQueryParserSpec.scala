@@ -17,6 +17,7 @@ import org.apache.lucene.search._
 import org.specs2.mutable.SpecificationWithJUnit
 import java.lang.{ Double => JDouble }
 import org.specs2.specification.Scope
+import org.apache.lucene.document.DoublePoint
 
 class ClouseauQueryParserSpec extends SpecificationWithJUnit {
   "ClouseauQueryParser" should {
@@ -34,11 +35,19 @@ class ClouseauQueryParserSpec extends SpecificationWithJUnit {
     }
 
     "support numeric range queries (integer)" in new parser {
-      parser.parse("foo:[1 TO 2]") must haveClass[LegacyNumericRangeQuery[JDouble]]
+      parser.parse("foo:[1 TO 2]") must be equalTo (DoublePoint.newRangeQuery("foo", 1, 2))
     }
 
     "support numeric range queries (float)" in new parser {
-      parser.parse("foo:[1.0 TO 2.0]") must haveClass[LegacyNumericRangeQuery[JDouble]]
+      parser.parse("foo:[1 TO 2]") must be equalTo (DoublePoint.newRangeQuery("foo", 1, 2))
+    }
+
+    "legacy support numeric range queries (integer)" in new parser {
+      legacyParser.parse("foo:[1 TO 2]") must haveClass[LegacyNumericRangeQuery[JDouble]]
+    }
+
+    "legacy support numeric range queries (float)" in new parser {
+      legacyParser.parse("foo:[1.0 TO 2.0]") must haveClass[LegacyNumericRangeQuery[JDouble]]
     }
 
     "support numeric term queries (integer)" in new parser {
@@ -65,4 +74,5 @@ class ClouseauQueryParserSpec extends SpecificationWithJUnit {
 trait parser extends Scope {
   val analyzer = new StandardAnalyzer()
   val parser = new ClouseauQueryParser("default", analyzer)
+  val legacyParser = new LegacyClouseauQueryParser("default", analyzer)
 }
