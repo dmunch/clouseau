@@ -64,9 +64,14 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
     "perform sorting" in new index_service {
       val doc1 = new Document()
+      val val1 = new BytesRef("foo")
       doc1.add(new StringField("_id", "foo", Field.Store.YES))
+      doc1.add(new SortedDocValuesField("_id", val1))
+
       val doc2 = new Document()
+      val val2 = new BytesRef("bar")
       doc2.add(new StringField("_id", "bar", Field.Store.YES))
+      doc2.add(new SortedDocValuesField("_id", val2))
 
       node.call(service, UpdateDocMsg("foo", doc1)) must be equalTo 'ok
       node.call(service, UpdateDocMsg("bar", doc2)) must be equalTo 'ok
@@ -284,8 +289,11 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
       val doc1 = new Document()
       doc1.add(new StringField("_id", "foo", Field.Store.YES))
+      doc1.add(new SortedDocValuesField("_id", foo))
+
       val doc2 = new Document()
       doc2.add(new StringField("_id", "bar", Field.Store.YES))
+      doc2.add(new SortedDocValuesField("_id", bar))
 
       node.call(service, UpdateDocMsg("foo", doc1)) must be equalTo 'ok
       node.call(service, UpdateDocMsg("bar", doc2)) must be equalTo 'ok
@@ -354,10 +362,17 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
       val doc1 = new Document()
       doc1.add(new StringField("_id", "foo", Field.Store.YES))
-      doc1.add(new LegacyDoubleField("num", 1.0, Field.Store.YES))
+      doc1.add(new SortedDocValuesField("_id", foo))
+      doc1.add(new DoublePoint("num", 2.0))
+      doc1.add(new StoredField("num", 2.0))
+      doc1.add(new DoubleDocValuesField("num", 2.0))
+
       val doc2 = new Document()
       doc2.add(new StringField("_id", "bar", Field.Store.YES))
-      doc1.add(new LegacyDoubleField("num", 2.0, Field.Store.YES))
+      doc2.add(new SortedDocValuesField("_id", bar))
+      doc2.add(new DoublePoint("num", 2.0))
+      doc2.add(new StoredField("num", 2.0))
+      doc2.add(new DoubleDocValuesField("num", 2.0))
 
       node.call(service, UpdateDocMsg("foo", doc1)) must be equalTo 'ok
       node.call(service, UpdateDocMsg("bar", doc2)) must be equalTo 'ok
@@ -387,18 +402,33 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
       val doc1 = new Document()
       doc1.add(new StringField("_id", "foo", Field.Store.YES))
-      doc1.add(new LegacyDoubleField("lon", 0.5, Field.Store.YES))
-      doc1.add(new LegacyDoubleField("lat", 57.15, Field.Store.YES))
+      doc1.add(new SortedDocValuesField("_id", foo))
+      doc1.add(new DoublePoint("lon", 0.5))
+      doc1.add(new StoredField("lon", 0.5))
+      doc1.add(new DoubleDocValuesField("lon", 0.5))
+      doc1.add(new DoublePoint("lat", 57.15))
+      doc1.add(new StoredField("lat", 57.15))
+      doc1.add(new DoubleDocValuesField("lat", 57.15))
 
       val doc2 = new Document()
       doc2.add(new StringField("_id", "bar", Field.Store.YES))
-      doc1.add(new LegacyDoubleField("lon", 10, Field.Store.YES))
-      doc1.add(new LegacyDoubleField("lat", 57.15, Field.Store.YES))
+      doc2.add(new SortedDocValuesField("_id", bar))
+      doc2.add(new DoublePoint("lon", 10))
+      doc2.add(new StoredField("lon", 10))
+      doc2.add(new DoubleDocValuesField("lon", 10))
+      doc2.add(new DoublePoint("lat", 57.15))
+      doc2.add(new StoredField("lat", 57.15))
+      doc2.add(new DoubleDocValuesField("lat", 57.15))
 
       val doc3 = new Document()
       doc3.add(new StringField("_id", "zzz", Field.Store.YES))
-      doc3.add(new LegacyDoubleField("lon", 3, Field.Store.YES))
-      doc3.add(new LegacyDoubleField("lat", 57.15, Field.Store.YES))
+      doc3.add(new SortedDocValuesField("_id", zzz))
+      doc3.add(new DoublePoint("lon", 3))
+      doc3.add(new StoredField("lon", 3))
+      doc3.add(new DoubleDocValuesField("lon", 3))
+      doc3.add(new DoublePoint("lat", 57.15))
+      doc3.add(new StoredField("lat", 57.15))
+      doc3.add(new DoubleDocValuesField("lat", 57.15))
 
       node.call(service, UpdateDocMsg("foo", doc1)) must be equalTo 'ok
       node.call(service, UpdateDocMsg("bar", doc2)) must be equalTo 'ok

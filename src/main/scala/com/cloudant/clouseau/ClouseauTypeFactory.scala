@@ -23,6 +23,7 @@ import org.jboss.netty.buffer.ChannelBuffer
 import org.apache.lucene.util.BytesRef
 import org.apache.lucene.facet.FacetsConfig
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField
+import org.apache.lucene.index.Term
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -96,7 +97,11 @@ object ClouseauTypeFactory extends TypeFactory {
 
   protected def readDoc(reader: TermReader): Document = {
     val result = new Document()
-    result.add(new StringField("_id", reader.readAs[String], Store.YES))
+
+    val id = reader.readAs[String]
+    result.add(new StringField("_id", id, Store.YES))
+    result.add(new SortedDocValuesField("_id", new BytesRef(id)))
+
     for (field <- reader.readAs[List[Any]]) {
       addFields(result, field)
     }
@@ -139,9 +144,12 @@ object ClouseauTypeFactory extends TypeFactory {
       toDouble(value) match {
         case Some(doubleValue) =>
           doc.add(new LegacyDoubleField(name, doubleValue, toStore(map)))
-          if (isFacet(map)) {
-            doc.add(new DoubleDocValuesField(name, doubleValue))
-          }
+          doc.add(new DoubleDocValuesField(name, doubleValue))
+          //TODO re-check if we need the docvalues field only for facets or if it's save
+          //to always add it
+          //if (isFacet(map)) {
+          //  doc.add(new DoubleDocValuesField(name, doubleValue))
+          //}
           'ok
         case None =>
           logger.warn("Unrecognized value: %s".format(value))
