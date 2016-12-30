@@ -24,6 +24,7 @@ import org.apache.lucene.util.BytesRef
 import org.apache.lucene.facet.FacetsConfig
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetField
 import org.apache.lucene.index.Term
+import org.apache.lucene.index.IndexOptions
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -131,8 +132,8 @@ object ClouseauTypeFactory extends TypeFactory {
       }
     case (name: String, value: Boolean, options: List[(String, Any)]) =>
       val map = options.toMap
-      //constructField(name, value.toString, toStore(map), Index.NOT_ANALYZED, toTermVector(map)) match {
-      constructField(name, value.toString, toFieldType(map)) match {
+      //is equivalent to StringField: indexed, but not tokenized 
+      constructField(name, value.toString, toFieldType(toStore(map), false, IndexOptions.DOCS, toTermVector(map))) match {
         case Some(field) =>
           doc.add(field)
           'ok
@@ -174,19 +175,6 @@ object ClouseauTypeFactory extends TypeFactory {
     }
   }
 
-  //private def constructField(name: String, value: String, store: Store, index: Index, tv: TermVector): Option[Field] = {
-  //  try {
-  //    Some(new Field(name, value, store, index, tv))
-  //  } catch {
-  //    case e: IllegalArgumentException =>
-  //      logger.error("Failed to construct field '%s' with reason '%s'".format(name, e.getMessage))
-  //      None
-  //    case e: NullPointerException =>
-  //      logger.error("Failed to construct field '%s' with reason '%s'".format(name, e.getMessage))
-  //      None
-  //  }
-  //}
-
   // These to* methods are stupid.
 
   def toFloat(a: Any): Float = a match {
@@ -216,7 +204,18 @@ object ClouseauTypeFactory extends TypeFactory {
   }
 
   def toFieldType(options: Map[String, Any]): FieldType = {
-    TextField.TYPE_STORED
+    toFieldType(toStore(options), true, toIndexOptions(options), toTermVector(options))
+  }
+
+  def toFieldType(store: Store, tokenized: Boolean, indexOptions: IndexOptions, termVector: Boolean): FieldType = {
+    val fieldType = new FieldType()
+    fieldType.setStored(store == Store.YES)
+    fieldType.setTokenized(tokenized)
+    fieldType.setIndexOptions(indexOptions)
+    fieldType.setStoreTermVectors(termVector)
+    fieldType.freeze()
+
+    fieldType
   }
 
   def toStore(options: Map[String, Any]): Store = {
@@ -235,26 +234,31 @@ object ClouseauTypeFactory extends TypeFactory {
     }
   }
 
-  //def toIndex(options: Map[String, Any]): Index = {
-  //  options.getOrElse("index", "analyzed") match {
-  //    case true => Index.ANALYZED
-  //    case false => Index.NO
-  //    case str: String =>
-  //      try {
-  //        Index.valueOf(str toUpperCase)
-  //      } catch {
-  //        case _: IllegalArgumentException =>
-  //          Index.ANALYZED
-  //      }
-  //    case _ =>
-  //      Index.ANALYZED
-  //  }
-  //}
+  def toIndexOptions(options: Map[String, Any]): IndexOptions = {
+    options.getOrElse("index", "docs_and_freqs_and_positions") match {
+      case true => IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
+      case false => IndexOptions.NONE
+      case str: String =>
+        try {
+          IndexOptions.valueOf(str toUpperCase)
+        } catch {
+          case _: IllegalArgumentException =>
+            IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
+        }
+      case _ =>
+        IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
+    }
+  }
 
-  //def toTermVector(options: Map[String, Any]): TermVector = {
-  //  val termVector = options.getOrElse("termvector", "no").asInstanceOf[String]
-  //  TermVector.valueOf(termVector toUpperCase)
-  //}
+  def toTermVector(options: Map[String, Any]): Boolean = {
+    options.getOrElse("termvector", "no") match {
+      case "no" => false
+      case "false" => false
+      case "yes" => true
+      case "true" => true
+      case _ => false
+    }
+  }
 
   def isFacet(options: Map[String, Any]) = {
     options.get("facet") match {

@@ -14,6 +14,7 @@ package com.cloudant.clouseau
 
 import org.specs2.mutable.SpecificationWithJUnit
 import org.apache.lucene.document.Field._
+import org.apache.lucene.index.IndexOptions
 
 class ClouseauTypeFactorySpec extends SpecificationWithJUnit {
 
@@ -53,35 +54,35 @@ class ClouseauTypeFactorySpec extends SpecificationWithJUnit {
     }
 
     "support true for index" in {
-      toIndex(Map("index" -> true)) must be equalTo Index.ANALYZED
+      toIndexOptions(Map("index" -> true)) must be equalTo IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
     }
 
     "support false for index" in {
-      toIndex(Map("index" -> false)) must be equalTo Index.NO
+      toIndexOptions(Map("index" -> false)) must be equalTo IndexOptions.NONE
     }
 
     "support all enumeration values for index" in {
-      for (index <- Index.values) {
-        (toIndex(Map("index" -> index.name)) must be equalTo
-          Index.valueOf(index.name))
+      for (indexOption <- IndexOptions.values) {
+        (toIndexOptions(Map("index" -> indexOption.name)) must be equalTo
+          IndexOptions.valueOf(indexOption.name))
       }
       ok
     }
 
     "support all enumeration values for index (case insensitively)" in {
-      for (index <- Index.values) {
-        (toIndex(Map("index" -> index.name.toLowerCase)) must be equalTo
-          Index.valueOf(index.name))
+      for (indexOption <- IndexOptions.values) {
+        (toIndexOptions(Map("index" -> indexOption.name.toLowerCase)) must be equalTo
+          IndexOptions.valueOf(indexOption.name))
       }
       ok
     }
 
     "use the default if index string is not recognized" in {
-      toIndex(Map("index" -> "hello")) must be equalTo Index.ANALYZED
+      toIndexOptions(Map("index" -> "hello")) must be equalTo IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
     }
 
     "use the default if index value is not recognized" in {
-      toIndex(Map("index" -> 12)) must be equalTo Index.ANALYZED
+      toIndexOptions(Map("index" -> 12)) must be equalTo IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
     }
   }
 
