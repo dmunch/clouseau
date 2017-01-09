@@ -24,7 +24,8 @@ the License.
     <lucene-version>6.3.0</lucene-version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <scala.version>2.12.0-RC2</scala.version>
+    <scala.version>2.12.1</scala.version>
+    <scala.compat.version>2.12</scala.compat.version>
     <scala.plugin.version>3.1.0</scala.plugin.version>
     <tika-version>1.0</tika-version>
   </properties>
@@ -37,13 +38,12 @@ the License.
     </repository>
     <repository>
       <snapshots>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
       </snapshots>
-      <id>bintray-dmunch-clouseau</id>
-      <name>bintray</name>
-      <url>http://dl.bintray.com/dmunch/clouseau</url>
+      <id>snapshots</id>
+      <name>oss-jfrog-artifactory-snapshots</name>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
     </repository>
-
   </repositories>
 
   <dependencies>
@@ -119,14 +119,14 @@ the License.
 
     <!-- Scalang -->
     <dependency>
-      <groupId>com.boundary</groupId>
-      <artifactId>scalang-scala_2.12.0-RC2</artifactId>
-      <version>0.28.99</version>
+      <groupId>com.dmunch</groupId>
+      <artifactId>scalang-scala_2.12</artifactId>
+      <version>0.29-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>1.5.6</version>
+      <version>1.7.22</version>
     </dependency>
 
     <!-- Scala -->
@@ -145,15 +145,9 @@ the License.
 
     <!-- Test -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.specs2</groupId>
-      <artifactId>specs2-junit_${scala.version}</artifactId>
-      <version>3.8.5</version>
+      <artifactId>specs2-junit_${scala.compat.version}</artifactId>
+      <version>3.8.6</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
