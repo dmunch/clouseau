@@ -109,7 +109,7 @@ object ClouseauTypeFactory extends TypeFactory {
     facetsConfig.build(result)
   }
 
-  private def addFields(doc: Document, field0: Any): Unit = field0 match {
+  def addFields(doc: Document, field0: Any): Unit = field0 match {
     case (name: String, value: String, options: List[(String, Any)]) =>
       val map = options.toMap
       constructField(name, value, toFieldType(map)) match {
@@ -140,6 +140,12 @@ object ClouseauTypeFactory extends TypeFactory {
         case None =>
           'ok
       }
+    case (name: String, value: List[Double], options: List[(String, Any)]) => {
+      val field = new LatLonPoint(name, value.tail.head, value.head)
+
+      doc.add(field)
+      'ok
+    }
     case (name: String, value: Any, options: List[(String, Any)]) =>
       val map = options.toMap
       toDouble(value) match {

@@ -14,7 +14,10 @@ package com.cloudant.clouseau
 
 import org.specs2.mutable.SpecificationWithJUnit
 import org.apache.lucene.document.Field._
+import org.apache.lucene.document.{ LatLonPoint, _ }
 import org.apache.lucene.index.IndexOptions
+
+import scala.collection.JavaConverters._
 
 class ClouseauTypeFactorySpec extends SpecificationWithJUnit {
 
@@ -84,6 +87,25 @@ class ClouseauTypeFactorySpec extends SpecificationWithJUnit {
     "use the default if index value is not recognized" in {
       toIndexOptions(Map("index" -> 12)) must be equalTo IndexOptions.DOCS_AND_FREQS_AND_POSITIONS
     }
-  }
 
+    "index two element array as LatLonPoint" in {
+      val doc = new Document()
+      val field0 = ("fieldName", List(1.2, 2), List[(String, Any)]())
+      addFields(doc, field0)
+
+      val fields = doc.asScala.toList
+      fields.length must be equalTo 1
+      fields.head must haveClass[LatLonPoint]
+      ok
+    }
+
+    "index two element array as LatLonPoint, first element as longitude, second as latitude" in {
+      val doc = new Document()
+      val field0 = ("fieldName", List(1.2, 2), List[(String, Any)]())
+      addFields(doc, field0)
+
+      val fields = doc.asScala.toList
+      fields.head.toString must be equalTo "LatLonPoint <fieldName:1.9999999646097422,1.1999999452382326>"
+    }
+  }
 }
