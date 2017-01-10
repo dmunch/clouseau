@@ -191,6 +191,71 @@ class IndexServiceSpec extends SpecificationWithJUnit {
         })
     }
 
+    "support geo_distance query" in new index_service {
+      val doc1 = new Document()
+      doc1.add(new StringField("_id", "foo", Field.Store.YES))
+      doc1.add(new LatLonPoint("geoField", 10, 10))
+
+      val doc2 = new Document()
+      doc2.add(new StringField("_id", "bar", Field.Store.YES))
+      doc2.add(new LatLonPoint("geoField", 11, 11))
+
+      node.call(service, UpdateDocMsg("foo", doc1)) must be equalTo 'ok
+      node.call(service, UpdateDocMsg("bar", doc2)) must be equalTo 'ok
+
+      //both documents are within distance
+      (node.call(service, SearchRequest(options =
+        Map('geo -> """
+                   {
+                          "geo_distance" : {
+                             "distance" : "200km",
+                             "geoField" : [10, 10]
+                          }
+                   } """
+        )))
+        must beLike {
+          case ('ok, List(_, ('total_hits, 2),
+            ('hits, List(
+              Hit(_, List(("_id", "foo"))),
+              Hit(_, List(("_id", "bar")))
+              )))) => ok
+        })
+
+      //only document1 within distance
+      (node.call(service, SearchRequest(options =
+        Map('geo -> """
+                   {
+                          "geo_distance" : {
+                             "distance" : "10km",
+                             "geoField" : [10, 10]
+                          }
+                   } """
+        )))
+        must beLike {
+          case ('ok, List(_, ('total_hits, 1),
+            ('hits, List(
+              Hit(_, List(("_id", "foo")))
+              )))) => ok
+        })
+
+      //only document2 within distance
+      (node.call(service, SearchRequest(options =
+        Map('geo -> """
+                   {
+                          "geo_distance" : {
+                             "distance" : "10km",
+                             "geoField" : [11, 11]
+                          }
+                   } """
+        )))
+        must beLike {
+          case ('ok, List(_, ('total_hits, 1),
+            ('hits, List(
+              Hit(_, List(("_id", "bar")))
+              )))) => ok
+        })
+    }
+
     "support faceting and drilldown" in new index_service {
 
       val doc1 = new Document()

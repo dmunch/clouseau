@@ -44,6 +44,11 @@ the License.
       <name>oss-jfrog-artifactory-snapshots</name>
       <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
     </repository>
+    <repository>
+      <id>MavenCentral</id>
+      <name>Maven Central</name>
+      <url>http://central.maven.org/maven2/</url>
+    </repository>
   </repositories>
 
   <dependencies>
@@ -128,7 +133,11 @@ the License.
       <artifactId>slf4j-log4j12</artifactId>
       <version>1.7.22</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.json4s</groupId>
+      <artifactId>json4s-native_2.12</artifactId>
+      <version>3.5.0</version>
+    </dependency>
     <!-- Scala -->
     <dependency>
       <groupId>org.scala-lang</groupId>
