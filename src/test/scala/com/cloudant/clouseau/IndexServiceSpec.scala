@@ -205,14 +205,7 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
       //both documents are within distance
       (node.call(service, SearchRequest(options =
-        Map('geo -> """
-                   {
-                          "geo_distance" : {
-                             "distance" : "200km",
-                             "geoField" : [10, 10]
-                          }
-                   } """
-        )))
+        Map('geo -> List(("geo_distance", List(("distance", "200km"), ("geoField", "10, 10")))), 'q -> "*:*")))
         must beLike {
           case ('ok, List(_, ('total_hits, 2),
             ('hits, List(
@@ -223,14 +216,7 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
       //only document1 within distance
       (node.call(service, SearchRequest(options =
-        Map('geo -> """
-                   {
-                          "geo_distance" : {
-                             "distance" : "10km",
-                             "geoField" : [10, 10]
-                          }
-                   } """
-        )))
+        Map('geo -> List(("geo_distance", List(("distance", "10km"), ("geoField", "10, 10")))), 'q -> "*:*")))
         must beLike {
           case ('ok, List(_, ('total_hits, 1),
             ('hits, List(
@@ -240,14 +226,7 @@ class IndexServiceSpec extends SpecificationWithJUnit {
 
       //only document2 within distance
       (node.call(service, SearchRequest(options =
-        Map('geo -> """
-                   {
-                          "geo_distance" : {
-                             "distance" : "10km",
-                             "geoField" : [11, 11]
-                          }
-                   } """
-        )))
+        Map('geo -> List(("geo_distance", List(("distance", "10km"), ("geoField", "11, 11")))), 'q -> "*:*")))
         must beLike {
           case ('ok, List(_, ('total_hits, 1),
             ('hits, List(

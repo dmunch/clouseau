@@ -20,68 +20,39 @@ class EsDslParserSpec extends SpecificationWithJUnit {
     import com.cloudant.clouseau.EsDSLParser._
 
     "parse geo_distance queries with lat lon as properties" in {
-      val query = parseGeoQuery("""
-       {
-          "geo_distance" : {
-             "distance" : "12km",
-             "fieldName" : {
-                "lat" : 40,
-                "lon" : -70
-            }
-          }
-      }""")
+      val query = parseGeoQuery(List(("geo_distance", List(("distance", "12km"), ("fieldName", List(("lat", 40), ("lon", -70)))))))
       query must be like {
         case GeoDistanceQuery(12000, List(("fieldName", GeoPoint(-70, 40)))) => ok
       }
     }
 
     "parse geo_distance queries with lat lon as array" in {
-      val query = parseGeoQuery("""
-       {
-          "geo_distance" : {
-             "distance" : "12km",
-             "fieldName" : [-70, 40]
-          }
-       }""")
-
+      val query = parseGeoQuery(List(("geo_distance", List(("distance", "12km"), ("fieldName", List(-70.1, 40))))))
       query must be like {
-        case GeoDistanceQuery(12000, List(("fieldName", GeoPoint(-70, 40)))) => ok
+        case GeoDistanceQuery(12000, List(("fieldName", GeoPoint(-70.1, 40)))) => ok
       }
     }
 
     "parse geo_distance queries with lat lon as string" in {
-      val query = parseGeoQuery("""
-       {
-          "geo_distance" : {
-             "distance" : "12km",
-             "fieldName" : "-70, 40"
-          }
-       }""")
-
+      val query = parseGeoQuery(List(("geo_distance", List(("distance", "12km"), ("fieldName", "-70.1, 40")))))
       query must be like {
-        case GeoDistanceQuery(12000, List(("fieldName", GeoPoint(-70, 40)))) => ok
+        case GeoDistanceQuery(12000, List(("fieldName", GeoPoint(-70.1, 40)))) => ok
       }
     }
 
     "parse geo_distance queries with multiple fields" in {
-      val query = parseGeoQuery("""
-       {
-          "geo_distance" : {
-             "distance" : "12km",
-             "fieldName1" : "-70, 40",
-             "fieldName2" : {
-                 "lat" : 41.1,
-                 "lon" : -70.2
-             }
-             "fieldName3" : [-73, 40.4]
-          }
-       }""")
+      val query = parseGeoQuery(List(("geo_distance", List(
+        ("distance", "12km"),
+        ("fieldName1", "-70, 40"),
+        ("fieldName2", List(("lat", 41.1), ("lon", -70.2))),
+        ("fieldName3", List(-73.1, 40.4))
+      ))))
 
       query must be like {
         case GeoDistanceQuery(12000, List(
           ("fieldName1", GeoPoint(-70, 40)),
           ("fieldName2", GeoPoint(-70.2, 41.1)),
-          ("fieldName3", GeoPoint(-73, 40.4))
+          ("fieldName3", GeoPoint(-73.1, 40.4))
           )) => ok
       }
     }

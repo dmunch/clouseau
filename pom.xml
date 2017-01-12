@@ -134,9 +134,9 @@ the License.
       <version>1.7.22</version>
     </dependency>
     <dependency>
-      <groupId>org.json4s</groupId>
-      <artifactId>json4s-native_2.12</artifactId>
-      <version>3.5.0</version>
+      <groupId>com.chuusai</groupId>
+      <artifactId>shapeless_2.12</artifactId>
+      <version>2.3.2</version>
     </dependency>
     <!-- Scala -->
     <dependency>

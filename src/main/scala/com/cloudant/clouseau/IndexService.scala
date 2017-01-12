@@ -222,7 +222,9 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
     val queryString = request.options.getOrElse('query, "*:*").asInstanceOf[String]
     val refresh = request.options.getOrElse('refresh, true).asInstanceOf[Boolean]
     val limit = request.options.getOrElse('limit, 25).asInstanceOf[Int]
-    val geoQuery = request.options.getOrElse('geo, "").asInstanceOf[String]
+    val geoQuery = request.options.get('geo)
+
+
     val counts = request.options.getOrElse('counts, 'nil) match {
       case 'nil =>
         None
@@ -253,17 +255,20 @@ class IndexService(ctx: ServiceContext[IndexServiceArgs]) extends Service(ctx) w
         safeSearch {
           val query = request.options.getOrElse('drilldown, Nil) match {
             case Nil =>
-
-              val query = EsDSLParser.toQuery(geoQuery) match {
-                case Some(geoQuery: Query) => {
-                  val bqb = new BooleanQuery.Builder()
-                  bqb.add(baseQuery, BooleanClause.Occur.MUST)
-                  bqb.add(geoQuery, BooleanClause.Occur.MUST)
-                  bqb.build()
+              geoQuery match {
+                case Some(list: List[(String, Any)]) => {
+                  EsDSLParser.toQuery(list) match {
+                    case Some(geoQuery: Query) => {
+                      val bqb = new BooleanQuery.Builder()
+                      bqb.add(baseQuery, BooleanClause.Occur.MUST)
+                      bqb.add(geoQuery, BooleanClause.Occur.MUST)
+                      bqb.build()
+                    }
+                    case _ => baseQuery
+                  }
                 }
-                case _ => baseQuery
+                case None => baseQuery
               }
-              query
 
             case categories: List[List[String]] =>
               val drilldownQuery = new DrillDownQuery(
